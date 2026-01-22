@@ -11,6 +11,14 @@ def _parse_date(s: pd.Series) -> pd.Series:
     # dados estão em dd/mm/yyyy
     return pd.to_datetime(s, errors="coerce", dayfirst=True)
 
+def _normalize_reference(s: pd.Series) -> pd.Series:
+    raw = s.astype(str).str.strip()
+    raw = raw.replace({"nan": np.nan, "None": np.nan, "": np.nan})
+    raw = raw.str.replace(r"\s+", "", regex=True)
+    base = raw.str.split(".").str[0]
+    base = base.replace({"nan": np.nan, "None": np.nan, "": np.nan})
+    return base
+
 def load_dataset(path_csv: str) -> pd.DataFrame:
     p = Path(path_csv)
     if not p.exists():
@@ -43,6 +51,9 @@ def load_dataset(path_csv: str) -> pd.DataFrame:
         df["DATA_BASE"] = df["EMISSAO_PRODUCAO"]
     else:
         df["DATA_BASE"] = pd.NaT
+
+    if "REFERENCIA_PRODUTO" in df.columns:
+        df["REFERENCIA_BASE"] = _normalize_reference(df["REFERENCIA_PRODUTO"])
 
     df["ANO"] = df["DATA_BASE"].dt.year
     df["MES"] = df["DATA_BASE"].dt.to_period("M").astype(str)

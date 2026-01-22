@@ -50,3 +50,15 @@ def atrasos_por_colecao(df: pd.DataFrame) -> pd.DataFrame:
     g = df.query("STATUS_VENCIMENTO == 'EM ATRASO'").groupby("NOME_COLECAO", as_index=False)["QTDE_PRODUCAO"].sum()
     g.rename(columns={"QTDE_PRODUCAO":"QTDE_ATRASO"}, inplace=True)
     return g.sort_values("QTDE_ATRASO", ascending=False)
+
+def top_referencias(df: pd.DataFrame, n: int=10) -> pd.DataFrame:
+    if "REFERENCIA_BASE" not in df.columns or "QTDE_PRODUCAO" not in df.columns:
+        return pd.DataFrame(columns=["REFERENCIA_BASE","QTDE_PRODUCAO"])
+    g = (
+        df.dropna(subset=["REFERENCIA_BASE"])
+        .groupby("REFERENCIA_BASE", as_index=False)["QTDE_PRODUCAO"]
+        .sum()
+        .sort_values("QTDE_PRODUCAO", ascending=False)
+        .head(n)
+    )
+    return g
